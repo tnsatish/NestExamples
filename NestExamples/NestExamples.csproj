@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{E25B4B7D-7C72-47F2-BD90-24BCFE3EB783}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>ElasticSearchExamples</RootNamespace>
-    <AssemblyName>ElasticSearchExamples</AssemblyName>
+    <RootNamespace>NestExamples</RootNamespace>
+    <AssemblyName>NestExamples</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

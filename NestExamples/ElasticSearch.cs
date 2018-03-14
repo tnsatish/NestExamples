@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ElasticSearchExamples
+namespace NestExamples
 {
 	public class ElasticSearch
 	{
@@ -333,11 +333,33 @@ namespace ElasticSearchExamples
 			return searchDescriptor;
 		}
 
-		public SearchDescriptor<User> QueryNotState(string state)
+		public SearchDescriptor<User> QueryNotState1(string state)
 		{
 			var searchDescriptor = new SearchDescriptor<User>().Index(_indexName);
 			QueryContainer query1 = Query<User>.Match(r => r.Field(f => f.State).Query(state));
 			searchDescriptor.Query(q => q.Bool(r => r.MustNot(query1)));
+			searchDescriptor.Sort(q => q.Field(s => s.Id, SortOrder.Ascending));
+			searchDescriptor.From(0);
+			searchDescriptor.Size(100);
+			return searchDescriptor;
+		}
+
+		public SearchDescriptor<User> QueryNotState2(string state)
+		{
+			var searchDescriptor = new SearchDescriptor<User>().Index(_indexName);
+			QueryContainer query1 = Query<User>.Match(r => r.Field(f => f.State).Query(state));
+			searchDescriptor.Query(q => q.Bool(r => r.Must(!query1)));
+			searchDescriptor.Sort(q => q.Field(s => s.Id, SortOrder.Ascending));
+			searchDescriptor.From(0);
+			searchDescriptor.Size(100);
+			return searchDescriptor;
+		}
+
+		public SearchDescriptor<User> QueryNotState3(string state)
+		{
+			var searchDescriptor = new SearchDescriptor<User>().Index(_indexName);
+			QueryContainer query1 = Query<User>.Match(r => r.Field(f => f.State).Query(state));
+			searchDescriptor.Query(q => !query1);
 			searchDescriptor.Sort(q => q.Field(s => s.Id, SortOrder.Ascending));
 			searchDescriptor.From(0);
 			searchDescriptor.Size(100);
@@ -404,7 +426,9 @@ namespace ElasticSearchExamples
 			ElasticQuery(Query13());
 			ElasticQuery(Query14());
 			ElasticQuery(Query15());
-			ElasticQuery(QueryNotState("AP"));
+			ElasticQuery(QueryNotState1("AP"));
+			ElasticQuery(QueryNotState2("AP"));
+			ElasticQuery(QueryNotState3("AP"));
 			ElasticQuery(QueryUsersByState("ap"));
 			ElasticQuery(QueryByCreatedDate(new DateTime(2011, 1, 1)));
 			ElasticQuery(QueryByNestedField("Value0"));
