@@ -16,18 +16,12 @@ namespace NestExamples
 			try
 			{
 				ElasticSearch search = new ElasticSearch();
-				try
-				{
-					search.DeleteIndex();
-				}
-				catch (Exception)
-				{
-				}
-
 				search.CreateIndex();
 				search.PopulateUsers();
 				search.Query();
 				search.DeleteIndex();
+				search.CreateAutoCompleteIndex("autocompleteindex");
+				search.DeleteIndex("autocompleteindex");
 			}
 			catch(Exception ex)
 			{

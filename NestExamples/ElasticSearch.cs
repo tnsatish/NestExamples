@@ -1,5 +1,6 @@
 ﻿using Elasticsearch.Net;
 using Nest;
+using NestExamples.Entities;
 using NLog;
 using System;
 using System.Collections.Generic;
@@ -19,7 +20,6 @@ namespace NestExamples
 
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 		private string _elasticServer;
-
 		private string _indexName;
 
 		public ElasticSearch()
@@ -57,58 +57,34 @@ namespace NestExamples
 			}
 		}
 
+		public ElasticClient GetClient()
+		{
+			return _client;
+		}
+
 		public void CreateIndex()
 		{
-			string url = _elasticServer + _indexName;
-			Log.Info("URL: " + url);
+			IndexFromFile idx = new IndexFromFile(_client, _indexName, "IndexSchema.json");
+			idx.DeleteIndexIfExists();
+			idx.CreateIndex();
+		}
 
-			string schema = File.ReadAllText("IndexSchema.json");
-			Log.Debug(schema);
-
-			byte[] bytes = Encoding.UTF8.GetBytes(schema);
-
-			WebRequest req = WebRequest.Create(url);
-			req.Method = "PUT";
-			req.ContentType = "application/json";
-
-			Stream dataStream = req.GetRequestStream();
-			dataStream.Write(bytes, 0, bytes.Length);
-			dataStream.Close();
-
-			try
-			{
-				var response = (HttpWebResponse) req.GetResponse();
-				Log.Info("Response Status: " + response.StatusCode + " - " + response.StatusDescription);
-				Log.Debug(readFromStream(response.GetResponseStream()));
-			}
-			catch (WebException ex)
-			{
-				Log.Error(readFromStream(ex.Response.GetResponseStream()));
-				throw ex;
-			}
+		public void CreateAutoCompleteIndex(string indexName)
+		{
+			var idx = new AutoCompleteIndex(_client, indexName);
+			idx.DeleteIndexIfExists();
+			idx.CreateIndex();
 		}
 
 		public void DeleteIndex()
 		{
-			string url = _elasticServer + _indexName;
-			Log.Info("Deleting Index: " + _indexName);
-			Log.Info("URL: " + url);
+			DeleteIndex(_indexName);
+		}
 
-			WebRequest req = WebRequest.Create(url);
-			req.Method = "DELETE";
-			req.ContentType = "application/json";
-
-			try
-			{
-				var response = (HttpWebResponse)req.GetResponse();
-				Log.Info("Response Status: " + response.StatusCode + " - " + response.StatusDescription);
-				Log.Debug(readFromStream(response.GetResponseStream()));
-			}
-			catch (WebException ex)
-			{
-				Log.Error(readFromStream(ex.Response.GetResponseStream()));
-				throw ex;
-			}
+		public void DeleteIndex(string index)
+		{
+			var idx = new IndexCreateDeleteBase(_elasticServer, index);
+			idx.DeleteIndex();
 		}
 
 		public void PopulateUsers()
@@ -186,8 +162,6 @@ namespace NestExamples
 			var searchDescriptor = new SearchDescriptor<User>().Index(_indexName);
 			searchDescriptor.Query(q => q.Range(r => r.Field("id").GreaterThanOrEquals(start)) && q.Range(r => r.Field("id").LessThanOrEquals(end)));
 			searchDescriptor.Sort(q => q.Field("id", SortOrder.Ascending));
-			searchDescriptor.From(0);
-			searchDescriptor.Size(100);
 			return searchDescriptor;
 		}
 
@@ -196,8 +170,6 @@ namespace NestExamples
 			var searchDescriptor = new SearchDescriptor<User>().Index(_indexName);
 			searchDescriptor.Query(q => (q.Range(r => r.Field("id").GreaterThanOrEquals(start)) && q.Range(r => r.Field("id").LessThanOrEquals(end))) || q.Term(r => r.State, state));
 			searchDescriptor.Sort(q => q.Field("id", SortOrder.Ascending));
-			searchDescriptor.From(0);
-			searchDescriptor.Size(100);
 			return searchDescriptor;
 		}
 
@@ -209,8 +181,6 @@ namespace NestExamples
 			QueryContainer query3 = Query<User>.Term(r => r.State, state);
 			searchDescriptor.Query(q => q.Bool(r => r.Must(query1, query2, query3)));
 			searchDescriptor.Sort(q => q.Field("id", SortOrder.Ascending));
-			searchDescriptor.From(0);
-			searchDescriptor.Size(100);
 			return searchDescriptor;
 		}
 
@@ -222,8 +192,6 @@ namespace NestExamples
 			QueryContainer query3 = Query<User>.Term(r => r.State, state);
 			searchDescriptor.Query(q => q.Bool(r => r.Must(query1, query2, query3)));
 			searchDescriptor.Sort(q => q.Field(s => s.Id, SortOrder.Ascending));
-			searchDescriptor.From(0);
-			searchDescriptor.Size(100);
 			return searchDescriptor;
 		}
 
@@ -236,8 +204,6 @@ namespace NestExamples
 			QueryContainer query3 = Query<User>.Term(r => r.State, state);
 			searchDescriptor.Query(q => q.Bool(r => r.Should(query12, query3)));
 			searchDescriptor.Sort(q => q.Field(s => s.Id, SortOrder.Ascending));
-			searchDescriptor.From(0);
-			searchDescriptor.Size(100);
 			return searchDescriptor;
 		}
 
@@ -248,8 +214,6 @@ namespace NestExamples
 			QueryContainer query2 = Query<User>.Term(r => r.State, state);
 			searchDescriptor.Query(q => q.Bool(r => r.Should(query1, query2)));
 			searchDescriptor.Sort(q => q.Field(s => s.Id, SortOrder.Ascending));
-			searchDescriptor.From(0);
-			searchDescriptor.Size(100);
 			return searchDescriptor;
 		}
 
@@ -260,8 +224,6 @@ namespace NestExamples
 			QueryContainer query2 = Query<User>.Terms(r => r.Field(s => s.State).Terms(states));
 			searchDescriptor.Query(q => q.Bool(r => r.Should(query1, query2)));
 			searchDescriptor.Sort(q => q.Field(s => s.Id, SortOrder.Ascending));
-			searchDescriptor.From(0);
-			searchDescriptor.Size(100);
 			return searchDescriptor;
 		}
 
@@ -271,8 +233,6 @@ namespace NestExamples
 			QueryContainer query1 = Query<User>.Match(r => r.Field(f => f.Name).Query(name));
 			searchDescriptor.Query(q => q.Bool(r => r.Must(query1)));
 			searchDescriptor.Sort(q => q.Field(s => s.Id, SortOrder.Ascending));
-			searchDescriptor.From(0);
-			searchDescriptor.Size(100);
 			return searchDescriptor;
 		}
 
@@ -282,8 +242,6 @@ namespace NestExamples
 			QueryContainer query1 = Query<User>.Match(r => r.Field(f => f.Name.Suffix("autocomplete")).Query(name));
 			searchDescriptor.Query(q => q.Bool(r => r.Must(query1)));
 			searchDescriptor.Sort(q => q.Field(s => s.Id, SortOrder.Ascending));
-			searchDescriptor.From(0);
-			searchDescriptor.Size(100);
 			return searchDescriptor;
 		}
 
@@ -291,8 +249,6 @@ namespace NestExamples
 		{
 			var searchDescriptor = new SearchDescriptor<User>().Index(_indexName);
 			searchDescriptor.Sort(q => q.Field(s => s.State, SortOrder.Ascending).Field(s => s.Id, SortOrder.Ascending));
-			searchDescriptor.From(0);
-			searchDescriptor.Size(100);
 			return searchDescriptor;
 		}
 
@@ -303,8 +259,6 @@ namespace NestExamples
 			sort.Field("state", SortOrder.Descending);
 			sort.Field("id", SortOrder.Descending);
 			searchDescriptor.Sort(q => sort);
-			searchDescriptor.From(0);
-			searchDescriptor.Size(100);
 			return searchDescriptor;
 		}
 
@@ -315,8 +269,6 @@ namespace NestExamples
 			sort.Field(q => q.State, SortOrder.Descending);
 			sort.Field(q => q.Id, SortOrder.Descending);
 			searchDescriptor.Sort(q => sort);
-			searchDescriptor.From(0);
-			searchDescriptor.Size(100);
 			return searchDescriptor;
 		}
 
@@ -328,8 +280,6 @@ namespace NestExamples
 			sort.Field(f => f.Field(q => q.State).Order(SortOrder.Descending).MissingLast());
 			sort.Field(q => q.Id, SortOrder.Descending);
 			searchDescriptor.Sort(q => sort);
-			searchDescriptor.From(0);
-			searchDescriptor.Size(100);
 			return searchDescriptor;
 		}
 
@@ -339,8 +289,6 @@ namespace NestExamples
 			QueryContainer query1 = Query<User>.Match(r => r.Field(f => f.State).Query(state));
 			searchDescriptor.Query(q => q.Bool(r => r.MustNot(query1)));
 			searchDescriptor.Sort(q => q.Field(s => s.Id, SortOrder.Ascending));
-			searchDescriptor.From(0);
-			searchDescriptor.Size(100);
 			return searchDescriptor;
 		}
 
@@ -350,8 +298,6 @@ namespace NestExamples
 			QueryContainer query1 = Query<User>.Match(r => r.Field(f => f.State).Query(state));
 			searchDescriptor.Query(q => q.Bool(r => r.Must(!query1)));
 			searchDescriptor.Sort(q => q.Field(s => s.Id, SortOrder.Ascending));
-			searchDescriptor.From(0);
-			searchDescriptor.Size(100);
 			return searchDescriptor;
 		}
 
@@ -361,8 +307,6 @@ namespace NestExamples
 			QueryContainer query1 = Query<User>.Match(r => r.Field(f => f.State).Query(state));
 			searchDescriptor.Query(q => !query1);
 			searchDescriptor.Sort(q => q.Field(s => s.Id, SortOrder.Ascending));
-			searchDescriptor.From(0);
-			searchDescriptor.Size(100);
 			return searchDescriptor;
 		}
 
@@ -372,8 +316,6 @@ namespace NestExamples
 			QueryContainer query1 = Query<User>.DateRange(r => r.Field(f => f.CreatedDate).GreaterThanOrEquals(date));
 			searchDescriptor.Query(q => q.Bool(r => r.Must(query1)));
 			searchDescriptor.Sort(q => q.Field(s => s.Id, SortOrder.Ascending));
-			searchDescriptor.From(0);
-			searchDescriptor.Size(100);
 			return searchDescriptor;
 		}
 
@@ -391,8 +333,6 @@ namespace NestExamples
 
 			searchDescriptor.Query(q => q.Bool(r => r.Must(query1)));
 			searchDescriptor.Sort(q => q.Field(s => s.Id, SortOrder.Ascending));
-			searchDescriptor.From(0);
-			searchDescriptor.Size(100);
 			return searchDescriptor;
 		}
 
@@ -444,13 +384,6 @@ namespace NestExamples
 				users.Add(user);
 			}
 			return users;
-		}
-
-		private string readFromStream(Stream stream)
-		{
-			StreamReader reader = new StreamReader(stream);
-			string response = reader.ReadToEnd();
-			return response;
 		}
 	}
 }

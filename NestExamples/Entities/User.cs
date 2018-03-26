@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NestExamples
+namespace NestExamples.Entities
 {
 	public class User
 	{
