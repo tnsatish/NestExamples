@@ -55,10 +55,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CreateDelete\IElasticIndex.cs" />
+    <Compile Include="CreateDelete\IndexFromFile.cs" />
+    <Compile Include="CreateDelete\ElasticIndexBase.cs" />
+    <Compile Include="CreateDelete\IPLocationIndex.cs" />
     <Compile Include="Entities\AutoCompleteItem.cs" />
     <Compile Include="ElasticSearch.cs" />
-    <Compile Include="IIndexCreateDelete.cs" />
-    <Compile Include="IndexCreateDelete.cs" />
+    <Compile Include="Entities\IPLocation.cs" />
+    <Compile Include="CreateDelete\AutoCompleteIndex.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RandomGenerator.cs" />

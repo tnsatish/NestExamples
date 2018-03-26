@@ -1,5 +1,6 @@
 ﻿using Elasticsearch.Net;
 using Nest;
+using NestExamples.CreateDelete;
 using NestExamples.Entities;
 using NLog;
 using System;
@@ -64,16 +65,30 @@ namespace NestExamples
 
 		public void CreateIndex()
 		{
-			IndexFromFile idx = new IndexFromFile(_client, _indexName, "IndexSchema.json");
-			idx.DeleteIndexIfExists();
-			idx.CreateIndex();
+			IndexFromFile idx = new IndexFromFile(_indexName, "IndexSchema.json");
+			idx.DeleteIndexIfExists(_client);
+			idx.CreateIndex(_client);
 		}
 
-		public void CreateAutoCompleteIndex(string indexName)
+		public void CreateIndex(IElasticIndex idx)
 		{
-			var idx = new AutoCompleteIndex(_client, indexName);
-			idx.DeleteIndexIfExists();
-			idx.CreateIndex();
+			idx.DeleteIndexIfExists(_client);
+			idx.CreateIndex(_client);
+		}
+
+		public void DeleteIndex(IElasticIndex idx)
+		{
+			idx.DeleteIndex(_client);
+		}
+
+		public void PopulateData(IElasticIndex idx)
+		{
+			idx.PopulateData(_client);
+		}
+
+		public void ExecuteQueries(IElasticIndex idx)
+		{
+			idx.ExecuteQueries(_client);
 		}
 
 		public void DeleteIndex()
@@ -83,8 +98,8 @@ namespace NestExamples
 
 		public void DeleteIndex(string index)
 		{
-			var idx = new IndexCreateDeleteBase(_elasticServer, index);
-			idx.DeleteIndex();
+			var idx = new ElasticIndexBase(index);
+			idx.DeleteIndex(_client);
 		}
 
 		public void PopulateUsers()
@@ -336,6 +351,22 @@ namespace NestExamples
 			return searchDescriptor;
 		}
 
+		public void SearchDescriptorToJson()
+		{
+			var searchDescriptor = new SearchDescriptor<User>().Index(new string[] { _indexName, "otherindex2" });
+			QueryContainer query1 = Query<User>.DateRange(r => r.Field(f => f.CreatedDate).GreaterThanOrEquals(new DateTime(2010, 1, 1)));
+			searchDescriptor.Query(q => q.Bool(r => r.Must(query1)));
+			searchDescriptor.Sort(q => q.Field(s => s.Id, SortOrder.Ascending));
+
+			Log.Info(((IUrlParameter)((ISearchRequest)searchDescriptor).Index).GetString(_client.ConnectionSettings));
+			Log.Info(((IUrlParameter)((ISearchRequest)searchDescriptor).Index).GetString(new ElasticClient().ConnectionSettings));
+
+			var memoryStream = new System.IO.MemoryStream();
+			new ElasticClient().RequestResponseSerializer.Serialize(searchDescriptor, memoryStream);
+			var json = System.Text.Encoding.UTF8.GetString(memoryStream.ToArray());
+			Log.Info(json);
+		}
+
 		public void Query()
 		{
 			ElasticQuery(QueryUsersByState("TN"));
@@ -372,6 +403,7 @@ namespace NestExamples
 			ElasticQuery(QueryUsersByState("ap"));
 			ElasticQuery(QueryByCreatedDate(new DateTime(2011, 1, 1)));
 			ElasticQuery(QueryByNestedField("Value0"));
+			SearchDescriptorToJson();
 		}
 
 		private List<User> GetUsers()

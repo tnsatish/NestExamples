@@ -9,131 +9,15 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NestExamples
+namespace NestExamples.CreateDelete
 {
-	public class IndexCreateDeleteBase : IIndexCreateDelete
+	public class AutoCompleteIndex : ElasticIndexBase
 	{
-		protected string _elasticServer;
-		protected string _indexName;
-		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
-
-		public IndexCreateDeleteBase() { }
-
-		public IndexCreateDeleteBase(string elasticServer, string indexName)
+		public AutoCompleteIndex(string indexName) : base(indexName)
 		{
-			_elasticServer = elasticServer;
-			_indexName = indexName;
 		}
 
-		public virtual void CreateIndex()
-		{
-			throw new NotImplementedException();
-		}
-
-		public void DeleteIndexIfExists()
-		{
-			// TODO: Check whether the index exists, and delete only if it exists.
-			try {
-				DeleteIndex();
-			} catch (Exception ex) {
-				Log.Info(ex.Message);
-			}
-		}
-
-		public void DeleteIndex()
-		{
-			string url = _elasticServer + _indexName;
-			Log.Info("Deleting Index: " + _indexName);
-			Log.Info("URL: " + url);
-
-			WebRequest req = WebRequest.Create(url);
-			req.Method = "DELETE";
-			req.ContentType = "application/json";
-
-			try
-			{
-				var response = (HttpWebResponse)req.GetResponse();
-				Log.Info("Response Status: " + response.StatusCode + " - " + response.StatusDescription);
-				Log.Debug(new StreamReader(response.GetResponseStream()).ReadToEnd());
-			}
-			catch (WebException ex)
-			{
-				Log.Error(new StreamReader(ex.Response.GetResponseStream()).ReadToEnd());
-				throw ex;
-			}
-		}
-	}
-
-	public class IndexFromFile : IndexCreateDeleteBase
-	{
-		private ElasticClient _client;
-		private string _fileName;
-		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
-
-		public IndexFromFile(ElasticClient client, string indexName, string fileName)
-		{
-			_client = client;
-			_indexName = indexName;
-			_fileName = fileName;
-			_elasticServer = client.ConnectionSettings.ConnectionPool.Nodes.ToArray()[0].Uri.ToString();
-			_indexName = client.ConnectionSettings.DefaultIndex;
-		}
-
-		public override void CreateIndex()
-		{
-			string url = _elasticServer + _indexName;
-			Log.Info("URL: " + url);
-
-			string schema = File.ReadAllText(_fileName);
-			Log.Debug(schema);
-
-			byte[] bytes = Encoding.UTF8.GetBytes(schema);
-
-			WebRequest req = WebRequest.Create(url);
-			req.Method = "PUT";
-			req.ContentType = "application/json";
-
-			Stream dataStream = req.GetRequestStream();
-			dataStream.Write(bytes, 0, bytes.Length);
-			dataStream.Close();
-
-			try
-			{
-				var response = (HttpWebResponse)req.GetResponse();
-				Log.Info("Response Status: " + response.StatusCode + " - " + response.StatusDescription);
-				Log.Debug(new StreamReader(response.GetResponseStream()).ReadToEnd());
-			}
-			catch (WebException ex)
-			{
-				Log.Error(new StreamReader(ex.Response.GetResponseStream()).ReadToEnd());
-				throw ex;
-			}
-		}
-	}
-
-	public class AutoCompleteIndex : IndexCreateDeleteBase
-	{
-		private ElasticClient _client;
-		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
-
-		public AutoCompleteIndex(ElasticClient client, string indexName)
-		{
-			_client = client;
-			_elasticServer = client.ConnectionSettings.ConnectionPool.Nodes.ToArray()[0].Uri.ToString();
-			_indexName = indexName;
-		}
-
-		public override void CreateIndex()
-		{
-			var createDescriptor = GetCreateIndexDescriptor();
-			var response = _client.CreateIndex(_indexName, createDescriptor);
-			if (response != null)
-			{
-				Log.Debug(response.DebugInformation);
-			}
-		}
-
-		private Func<CreateIndexDescriptor, CreateIndexDescriptor> GetCreateIndexDescriptor()
+		protected override Func<CreateIndexDescriptor, CreateIndexDescriptor> GetCreateIndexDescriptor()
 		{
 			Func<CreateIndexDescriptor, CreateIndexDescriptor> CreateIndexFunc =
 				i => i.Settings(s => s

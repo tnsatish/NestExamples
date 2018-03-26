@@ -1,4 +1,6 @@
-﻿using NLog;
+﻿using NestExamples.CreateDelete;
+using NestExamples.Entities;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,8 +22,11 @@ namespace NestExamples
 				search.PopulateUsers();
 				search.Query();
 				search.DeleteIndex();
-				search.CreateAutoCompleteIndex("autocompleteindex");
-				search.DeleteIndex("autocompleteindex");
+
+				IElasticIndex ip = new IPLocationIndex("iplocationindex");
+				search.CreateIndex(ip);
+				search.PopulateData(ip);
+				search.DeleteIndex(ip);
 			}
 			catch(Exception ex)
 			{
