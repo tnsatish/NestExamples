@@ -21,16 +21,16 @@ namespace NestExamples
 				ElasticSearch search = new ElasticSearch();
 				ElasticClient client = search.GetClient();
 
-				//search.CreateIndex();
-				//search.PopulateUsers();
-				//search.Query();
-				//search.DeleteIndex();
+				search.CreateIndex();
+				search.PopulateUsers();
+				search.Query();
+				search.DeleteIndex();
 
 				IElasticIndex ip = new IPLocationIndex(client, "iplocationindex");
-				//ip.CreateIndex();
-				//ip.PopulateData();
+				ip.CreateIndex();
+				ip.PopulateData();
 				ip.ExecuteQueries();
-				//ip.DeleteIndex();
+				ip.DeleteIndex();
 			}
 			catch(Exception ex)
 			{
