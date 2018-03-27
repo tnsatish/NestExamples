@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 
 namespace NestExamples.CreateDelete
 {
-	public class AutoCompleteIndex : ElasticIndexBase
+	public class AutoCompleteIndex : ElasticIndexBase<AutoCompleteItem>
 	{
-		public AutoCompleteIndex(string indexName) : base(indexName)
+		public AutoCompleteIndex(ElasticClient client, string indexName) : base(client, indexName)
 		{
 		}
 

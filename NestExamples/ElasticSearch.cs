@@ -65,31 +65,31 @@ namespace NestExamples
 
 		public void CreateIndex()
 		{
-			IndexFromFile idx = new IndexFromFile(_indexName, "IndexSchema.json");
-			idx.DeleteIndexIfExists(_client);
-			idx.CreateIndex(_client);
+			IndexFromFile idx = new IndexFromFile(_client, _indexName, "IndexSchema.json");
+			idx.DeleteIndexIfExists();
+			idx.CreateIndex();
 		}
 
-		public void CreateIndex(IElasticIndex idx)
-		{
-			idx.DeleteIndexIfExists(_client);
-			idx.CreateIndex(_client);
-		}
+		//public void CreateIndex(IElasticIndex idx)
+		//{
+		//	idx.DeleteIndexIfExists();
+		//	idx.CreateIndex();
+		//}
 
-		public void DeleteIndex(IElasticIndex idx)
-		{
-			idx.DeleteIndex(_client);
-		}
+		//public void DeleteIndex(IElasticIndex idx)
+		//{
+		//	idx.DeleteIndex();
+		//}
 
-		public void PopulateData(IElasticIndex idx)
-		{
-			idx.PopulateData(_client);
-		}
+		//public void PopulateData(IElasticIndex idx)
+		//{
+		//	idx.PopulateData();
+		//}
 
-		public void ExecuteQueries(IElasticIndex idx)
-		{
-			idx.ExecuteQueries(_client);
-		}
+		//public void ExecuteQueries(IElasticIndex idx)
+		//{
+		//	idx.ExecuteQueries();
+		//}
 
 		public void DeleteIndex()
 		{
@@ -98,8 +98,8 @@ namespace NestExamples
 
 		public void DeleteIndex(string index)
 		{
-			var idx = new ElasticIndexBase(index);
-			idx.DeleteIndex(_client);
+			var idx = new ElasticIndexBase<User>(_client, index);
+			idx.DeleteIndex();
 		}
 
 		public void PopulateUsers()

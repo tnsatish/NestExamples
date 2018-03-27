@@ -1,4 +1,5 @@
-﻿using NestExamples.CreateDelete;
+﻿using Nest;
+using NestExamples.CreateDelete;
 using NestExamples.Entities;
 using NLog;
 using System;
@@ -18,15 +19,18 @@ namespace NestExamples
 			try
 			{
 				ElasticSearch search = new ElasticSearch();
-				search.CreateIndex();
-				search.PopulateUsers();
-				search.Query();
-				search.DeleteIndex();
+				ElasticClient client = search.GetClient();
 
-				IElasticIndex ip = new IPLocationIndex("iplocationindex");
-				search.CreateIndex(ip);
-				search.PopulateData(ip);
-				search.DeleteIndex(ip);
+				//search.CreateIndex();
+				//search.PopulateUsers();
+				//search.Query();
+				//search.DeleteIndex();
+
+				IElasticIndex ip = new IPLocationIndex(client, "iplocationindex");
+				//ip.CreateIndex();
+				//ip.PopulateData();
+				ip.ExecuteQueries();
+				//ip.DeleteIndex();
 			}
 			catch(Exception ex)
 			{

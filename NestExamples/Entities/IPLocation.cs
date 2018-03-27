@@ -50,5 +50,12 @@ namespace NestExamples.Entities
 				}
 			}
 		}
+
+		public override string ToString()
+		{
+			StringBuilder sb = new StringBuilder();
+			sb.AppendFormat("{0} {1} {2} {3} {4} {5} {6} {7}", Id, IPAddressFrom, IPAddressTo, CountryCode, State, City, Latitude, Longitude, Timezone);
+			return sb.ToString();
+		}
 	}
 }

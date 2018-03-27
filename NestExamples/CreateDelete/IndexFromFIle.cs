@@ -11,23 +11,23 @@ using System.Threading.Tasks;
 
 namespace NestExamples.CreateDelete
 {
-	public class IndexFromFile : ElasticIndexBase
+	public class IndexFromFile : ElasticIndexBase<User>
 	{
 		private string _fileName;
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-		public IndexFromFile(string indexName, string fileName) : base(indexName)
+		public IndexFromFile(ElasticClient client, string indexName, string fileName) : base(client, indexName)
 		{
 			_fileName = fileName;
 		}
 
-		public override void DeleteIndexIfExists(ElasticClient client)
+		public override void DeleteIndexIfExists()
 		{
 			// TODO: Check whether the index exists, and delete only if it exists.
 			//_client.IndexExists()
 			try
 			{
-				DeleteIndex(client);
+				DeleteIndex();
 			}
 			catch (Exception ex)
 			{
@@ -35,33 +35,8 @@ namespace NestExamples.CreateDelete
 			}
 		}
 
-		public override void DeleteIndex(ElasticClient client)
+		public override void CreateIndex()
 		{
-			_elasticServer = client.ConnectionSettings.ConnectionPool.Nodes.ToArray()[0].Uri.ToString();
-			string url = _elasticServer + _indexName;
-			Log.Info("Deleting Index: " + _indexName);
-			Log.Info("URL: " + url);
-
-			WebRequest req = WebRequest.Create(url);
-			req.Method = "DELETE";
-			req.ContentType = "application/json";
-
-			try
-			{
-				var response = (HttpWebResponse)req.GetResponse();
-				Log.Info("Response Status: " + response.StatusCode + " - " + response.StatusDescription);
-				Log.Debug(new StreamReader(response.GetResponseStream()).ReadToEnd());
-			}
-			catch (WebException ex)
-			{
-				Log.Error(new StreamReader(ex.Response.GetResponseStream()).ReadToEnd());
-				throw ex;
-			}
-		}
-
-		public override void CreateIndex(ElasticClient client)
-		{
-			_elasticServer = client.ConnectionSettings.ConnectionPool.Nodes.ToArray()[0].Uri.ToString();
 			string url = _elasticServer + _indexName;
 			Log.Info("URL: " + url);
 

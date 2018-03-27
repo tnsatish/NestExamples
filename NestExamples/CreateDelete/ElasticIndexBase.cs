@@ -13,23 +13,27 @@ using System.Threading.Tasks;
 
 namespace NestExamples.CreateDelete
 {
-	public class ElasticIndexBase : IElasticIndex
+	public class ElasticIndexBase<T> : IElasticIndex where T : class
 	{
 		protected string _elasticServer;
 		protected string _indexName;
+		protected ElasticClient _client;
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
 		public ElasticIndexBase() { }
 
-		public ElasticIndexBase(string indexName)
+		public ElasticIndexBase(ElasticClient client, string indexName)
 		{
+			_client = client;
 			_indexName = indexName;
+			_elasticServer = client.ConnectionSettings.ConnectionPool.Nodes.ToArray()[0].Uri.ToString();
 		}
 
-		public virtual void CreateIndex(ElasticClient client)
+		public virtual void CreateIndex()
 		{
+			DeleteIndexIfExists();
 			var createDescriptor = GetCreateIndexDescriptor();
-			var response = client.CreateIndex(_indexName, createDescriptor);
+			var response = _client.CreateIndex(_indexName, createDescriptor);
 			if (response != null)
 			{
 				Log.Debug(response.DebugInformation);
@@ -41,20 +45,19 @@ namespace NestExamples.CreateDelete
 			throw new NotImplementedException();
 		}
 
-		public virtual void DeleteIndexIfExists(ElasticClient client)
+		public virtual void DeleteIndexIfExists()
 		{
 			// TODO: Check whether the index exists, and delete only if it exists.
 			//_client.IndexExists()
 			try {
-				DeleteIndex(client);
+				DeleteIndex();
 			} catch (Exception ex) {
 				Log.Info(ex.Message);
 			}
 		}
 
-		public virtual void DeleteIndex(ElasticClient client)
+		public virtual void DeleteIndex()
 		{
-			_elasticServer = client.ConnectionSettings.ConnectionPool.Nodes.ToArray()[0].Uri.ToString();
 			string url = _elasticServer + _indexName;
 			Log.Info("Deleting Index: " + _indexName);
 			Log.Info("URL: " + url);
@@ -76,49 +79,14 @@ namespace NestExamples.CreateDelete
 			}
 		}
 
-		//public virtual void PopulateData(ElasticClient client)
-		//{
-		//	var descriptor = new BulkDescriptor();
-		//	//foreach (var entity in users)
-		//	//{
-		//	//	var user = entity;
-		//	//	descriptor.Index<T>(op => op
-		//	//		.Index(this._indexName)
-		//	//		.Version(DateTime.Now.Ticks)
-		//	//		.VersionType(VersionType.External)
-		//	//		.Document(user)
-		//	//		);
-		//	//}
-
-		//	// Execute the bulk indexing operation
-		//	var response = client.Bulk(descriptor);
-
-		//	// Log the request/response
-		//	if (response != null)
-		//	{
-		//		// TODO: Log the response.
-		//		Log.Debug("Indexed the users");
-		//	}
-		//	else
-		//	{
-		//		Log.Error("[ElasticSearch] Unknown error - received NULL response from bulk operation.");
-		//	}
-		//	Thread.Sleep(5000);
-		//}
-
-		public virtual void PopulateData(ElasticClient client)
+		public virtual void PopulateData()
 		{
 			var descriptor = new BulkDescriptor();
 			AddElementsToIndex(descriptor);
+			var response = _client.Bulk(descriptor);
 
-			// Execute the bulk indexing operation
-			var response = client.Bulk(descriptor);
-
-			// Log the request/response
 			if (response != null)
 			{
-				// TODO: Log the response.
-				Log.Debug("Indexed the users");
 				Log.Debug(response.DebugInformation);
 			}
 			else
@@ -130,9 +98,10 @@ namespace NestExamples.CreateDelete
 
 		protected virtual void AddElementsToIndex(BulkDescriptor desc)
 		{
+			throw new NotImplementedException();
 		}
 
-		protected virtual void AddElementsToIndex<T>(BulkDescriptor descriptor, List<T> elements) where T : class
+		protected virtual void AddElementsToIndex(BulkDescriptor descriptor, List<T> elements)
 		{
 			foreach(T element in elements)
 			{
@@ -143,24 +112,21 @@ namespace NestExamples.CreateDelete
 			}
 		}
 
-		public T[] Reverse<T>(T[] array)
+		protected void ExecuteQuery(SearchDescriptor<T> searchDescriptor)
 		{
-			var result = new T[array.Length];
-			int j = 0;
-			for (int i = array.Length; i >= 0; i--)
+			var response = _client.Search<T>(searchDescriptor);
+			if (response != null)
 			{
-				result[j] = array[i];
-				j++;
+				Log.Debug(response.DebugInformation);
+				Log.Debug("Result Count: " + response.Total);
+				foreach (var user in response.Hits)
+				{
+					Log.Debug(user.Source.ToString());
+				}
 			}
-			return result;
 		}
 
-		public virtual Type GetObjectType()
-		{
-			throw new NotImplementedException();
-		}
-
-		public virtual void ExecuteQueries(ElasticClient client)
+		public virtual void ExecuteQueries()
 		{
 			throw new NotImplementedException();
 		}

@@ -13,10 +13,10 @@ namespace NestExamples.CreateDelete
 {
 	public interface IElasticIndex
 	{
-		void CreateIndex(ElasticClient client);
-		void DeleteIndex(ElasticClient client);
-		void DeleteIndexIfExists(ElasticClient client);
-		void PopulateData(ElasticClient client);
-		void ExecuteQueries(ElasticClient client);
+		void CreateIndex();
+		void DeleteIndex();
+		void DeleteIndexIfExists();
+		void PopulateData();
+		void ExecuteQueries();
 	}
 }
