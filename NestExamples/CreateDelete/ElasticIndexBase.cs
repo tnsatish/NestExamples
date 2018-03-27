@@ -40,6 +40,37 @@ namespace NestExamples.CreateDelete
 			}
 		}
 
+		public void CreateIndexFromFile(string fileName)
+		{
+			string url = _elasticServer + _indexName;
+			Log.Info("URL: " + url);
+
+			string schema = File.ReadAllText(fileName);
+			Log.Debug(schema);
+
+			byte[] bytes = Encoding.UTF8.GetBytes(schema);
+
+			WebRequest req = WebRequest.Create(url);
+			req.Method = "PUT";
+			req.ContentType = "application/json";
+
+			Stream dataStream = req.GetRequestStream();
+			dataStream.Write(bytes, 0, bytes.Length);
+			dataStream.Close();
+
+			try
+			{
+				var response = (HttpWebResponse)req.GetResponse();
+				Log.Info("Response Status: " + response.StatusCode + " - " + response.StatusDescription);
+				Log.Debug(new StreamReader(response.GetResponseStream()).ReadToEnd());
+			}
+			catch (WebException ex)
+			{
+				Log.Error(new StreamReader(ex.Response.GetResponseStream()).ReadToEnd());
+				throw ex;
+			}
+		}
+
 		protected virtual Func<CreateIndexDescriptor, CreateIndexDescriptor> GetCreateIndexDescriptor()
 		{
 			throw new NotImplementedException();
@@ -112,7 +143,7 @@ namespace NestExamples.CreateDelete
 			}
 		}
 
-		protected void ExecuteQuery(SearchDescriptor<T> searchDescriptor)
+		public void ExecuteQuery(SearchDescriptor<T> searchDescriptor)
 		{
 			var response = _client.Search<T>(searchDescriptor);
 			if (response != null)

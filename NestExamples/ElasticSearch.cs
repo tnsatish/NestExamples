@@ -65,7 +65,7 @@ namespace NestExamples
 
 		public void CreateIndex()
 		{
-			IndexFromFile idx = new IndexFromFile(_client, _indexName, "IndexSchema.json");
+			IndexFromFile<User> idx = new IndexFromFile<User>(_client, _indexName, "IndexSchema.json");
 			idx.DeleteIndexIfExists();
 			idx.CreateIndex();
 		}
@@ -363,7 +363,7 @@ namespace NestExamples
 
 			var memoryStream = new System.IO.MemoryStream();
 			new ElasticClient().RequestResponseSerializer.Serialize(searchDescriptor, memoryStream);
-			var json = System.Text.Encoding.UTF8.GetString(memoryStream.ToArray());
+			var json = Encoding.UTF8.GetString(memoryStream.ToArray());
 			Log.Info(json);
 		}
 
