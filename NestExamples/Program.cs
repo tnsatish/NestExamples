@@ -1,12 +1,7 @@
 ﻿using Nest;
 using NestExamples.CreateDelete;
-using NestExamples.Entities;
 using NLog;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NestExamples
 {

@@ -70,27 +70,6 @@ namespace NestExamples
 			idx.CreateIndex();
 		}
 
-		//public void CreateIndex(IElasticIndex idx)
-		//{
-		//	idx.DeleteIndexIfExists();
-		//	idx.CreateIndex();
-		//}
-
-		//public void DeleteIndex(IElasticIndex idx)
-		//{
-		//	idx.DeleteIndex();
-		//}
-
-		//public void PopulateData(IElasticIndex idx)
-		//{
-		//	idx.PopulateData();
-		//}
-
-		//public void ExecuteQueries(IElasticIndex idx)
-		//{
-		//	idx.ExecuteQueries();
-		//}
-
 		public void DeleteIndex()
 		{
 			DeleteIndex(_indexName);
@@ -367,6 +346,100 @@ namespace NestExamples
 			Log.Info(json);
 		}
 
+		public void QueryAggregator(Func<SearchDescriptor<User>, SearchDescriptor<User>> descriptor)
+		{
+			var response = _client.Search(descriptor);
+			if (response != null)
+			{
+				Log.Debug(response.DebugInformation);
+				Log.Debug("Result Count: " + response.Total);
+				foreach (var user in response.Hits)
+				{
+					Log.Debug(user.Source.ToString());
+				}
+				var aggregations = response.Aggregations.Terms("state").Buckets.OfType<KeyedBucket<string>>();
+				foreach (var aggregation in aggregations)
+				{
+					Log.Debug(aggregation.Key + " - " + aggregation.DocCount);
+				}
+			}
+		}
+
+		public Func<SearchDescriptor<User>, SearchDescriptor<User>> QueryAggergator1()
+		{
+			 return s => s
+							.From(0)
+							.Size(0)
+							.Index(_indexName)
+							.Query(q => q.Range(r => r.Field("id").GreaterThanOrEquals(5)) && q.Range(r => r.Field("id").LessThanOrEquals(60)))
+							.Aggregations(a => a.Terms("state",
+									c => c.Field(p => p.State).Size(30).Aggregations(g => g.ValueCount("stateCount", d => d.Field(e => e.State)))));
+		}
+
+		public Func<SearchDescriptor<User>, SearchDescriptor<User>> QueryAggergator2()
+		{
+			return s => s
+					.From(0)
+					.Size(0)
+					.Index(_indexName)
+					.Query(q => q.Range(r => r.Field("id").GreaterThanOrEquals(5)) && q.Range(r => r.Field("id").LessThanOrEquals(60)))
+					.Aggregations(a => a.Terms("state", st => st
+											.Field(p => p.State)
+											.MinimumDocumentCount(2)
+											.Size(20)
+											.ShardSize(100)
+											.ExecutionHint(TermsAggregationExecutionHint.Map)
+											.Missing("n/a")
+											.Script(ss => ss.Source("'State of Being: '+_value"))
+											.Order(o => o
+												.KeyAscending()
+												.CountDescending()
+											)
+											.Meta(m => m
+												.Add("foo", "bar")
+											)));
+		}
+
+		public Func<SearchDescriptor<User>, SearchDescriptor<User>> QueryAggergator3()
+		{
+			return s => s
+						   .From(0)
+						   .Size(0)
+						   .Index(_indexName)
+						   .Query(q => q.Range(r => r.Field(f => f.Id).GreaterThanOrEquals(5)) && q.Range(r => r.Field(f => f.Id).LessThanOrEquals(60)))
+						   .Aggregations(a => a.Terms("state",
+								   c => c.Field(p => p.State).Size(30).Order(o => o.CountDescending())));
+		}
+
+		public void QueryAggergator4()
+		{
+			Func<SearchDescriptor<User>, SearchDescriptor<User>> descriptor = s => s
+						   .From(0)
+						   .Size(0)
+						   .Index(_indexName)
+						   .Aggregations(t => t.Filter("states", f1 => f1.Filter(f2 => f2
+								.Range(r => r.Field(f => f.Id).GreaterThanOrEquals(5)) && f2.Range(r => r.Field(f => f.Id).LessThanOrEquals(60)))
+								.Aggregations(a => a.Terms("state",
+								   c => c.Field(p => p.State).Size(30).Order(o => o.CountDescending())))));
+
+			var response = _client.Search(descriptor);
+			if (response != null)
+			{
+				Log.Debug(response.DebugInformation);
+				Log.Debug("Result Count: " + response.Total);
+				foreach (var user in response.Hits)
+				{
+					Log.Debug(user.Source.ToString());
+				}
+				var aggregations = ((BucketAggregate)(((SingleBucketAggregate)response.Aggregations["states"])["state"])).Items.OfType<KeyedBucket<object>>();
+				foreach (var aggregation in aggregations)
+				{
+					Log.Debug(aggregation.Key + " - " + aggregation.DocCount);
+				}
+			}
+
+		}
+
 		public void Query()
 		{
 			ElasticQuery(QueryUsersByState("TN"));
@@ -404,6 +477,10 @@ namespace NestExamples
 			ElasticQuery(QueryByCreatedDate(new DateTime(2011, 1, 1)));
 			ElasticQuery(QueryByNestedField("Value0"));
 			SearchDescriptorToJson();
+			QueryAggregator(QueryAggergator1());
+			QueryAggregator(QueryAggergator2());
+			QueryAggregator(QueryAggergator3());
+			QueryAggergator4();
 		}
 
 		private List<User> GetUsers()
