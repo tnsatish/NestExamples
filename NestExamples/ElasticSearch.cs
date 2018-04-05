@@ -497,11 +497,21 @@ namespace NestExamples
 		{
 			User user = new User();
 			user.State = "TN";
-			var desc = new QueryContainerDescriptor<UserPercolate>()
-								.Percolate(p => p.Document<User>(user).Field(q => q.Query));
+			var desc = Query<UserPercolate>.Percolate(p => p.Document<User>(user).Field(q => q.Query));
 			var searchDescriptor = new SearchDescriptor<UserPercolate>()
 										.Index(_percolateIndexName)
 										.Query(q => q.Range(s => s.Field(a => a.SearchId).GreaterThanOrEquals(4).LessThanOrEquals(20)) && desc);
+			pidx.ExecuteQuery(searchDescriptor);
+		}
+
+		private void PercolateWithFilters4()
+		{
+			User user = new User();
+			user.State = "TN";
+			var searchDescriptor = new SearchDescriptor<UserPercolate>()
+										.Index(_percolateIndexName)
+										.Query(q => q.Range(s => s.Field(a => a.SearchId).GreaterThanOrEquals(4).LessThanOrEquals(20)) 
+													&& Query<UserPercolate>.Percolate(p => p.Document<User>(user).Field(r => r.Query)));
 			pidx.ExecuteQuery(searchDescriptor);
 		}
 
@@ -551,6 +561,7 @@ namespace NestExamples
 			PercolateWithFilters1();
 			PercolateWithFilters2();
 			PercolateWithFilters3();
+			PercolateWithFilters4();
 		}
 
 		private List<User> GetUsers()
