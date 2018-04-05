@@ -22,14 +22,22 @@ namespace NestExamples
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 		private string _elasticServer;
 		private string _indexName;
+		private string _percolateIndexName;
+		private IndexFromFile<User> idx;
+		private IndexFromFile<UserPercolate> pidx;
 
 		public ElasticSearch()
 		{
 			var nodes = ConfigurationManager.AppSettings["ElasticSearchNodes"];
 			_indexName = ConfigurationManager.AppSettings["Index"];
+			_percolateIndexName = ConfigurationManager.AppSettings["IndexPercolate"];
 			if (string.IsNullOrEmpty(_indexName))
 			{
 				_indexName = "users" + DateTime.Now.Ticks;
+			}
+			if(string.IsNullOrEmpty(_percolateIndexName))
+			{
+				_percolateIndexName = "userpercolate";
 			}
 
 			if (!string.IsNullOrWhiteSpace(nodes))
@@ -56,6 +64,8 @@ namespace NestExamples
 			{
 				throw new ArgumentException("Elastic Search Nodes Configuration not available");
 			}
+			idx = new IndexFromFile<User>(_client, _indexName, "Schema/User.json");
+			pidx = new IndexFromFile<UserPercolate>(_client, _percolateIndexName, "Schema/UserPercolate.json");
 		}
 
 		public ElasticClient GetClient()
@@ -65,14 +75,16 @@ namespace NestExamples
 
 		public void CreateIndex()
 		{
-			IndexFromFile<User> idx = new IndexFromFile<User>(_client, _indexName, "IndexSchema.json");
 			idx.DeleteIndexIfExists();
 			idx.CreateIndex();
+			pidx.DeleteIndexIfExists();
+			pidx.CreateIndex();
 		}
 
 		public void DeleteIndex()
 		{
 			DeleteIndex(_indexName);
+			DeleteIndex(_percolateIndexName);
 		}
 
 		public void DeleteIndex(string index)
@@ -83,47 +95,13 @@ namespace NestExamples
 
 		public void PopulateUsers()
 		{
-			List<User> users = GetUsers();
-			var descriptor = new BulkDescriptor();
-			foreach (var entity in users)
-			{
-				var user = entity;
-				descriptor.Index<User>(op => op
-					.Index(this._indexName)
-					.Version(DateTime.Now.Ticks)
-					.VersionType(VersionType.External)
-					.Document(user)
-					);
-			}
-
-			// Execute the bulk indexing operation
-			var response = this._client.Bulk(descriptor);
-
-			// Log the request/response
-			if (response != null)
-			{
-				// TODO: Log the response.
-				Log.Debug("Indexed the users");
-			}
-			else
-			{
-				Log.Error("[ElasticSearch] Unknown error - received NULL response from bulk operation.");
-			}
-			Thread.Sleep(5000);
+			idx.PopulateData(GetUsers());
+			PopulatePercolateQueries();
 		}
 
 		public void ElasticQuery(SearchDescriptor<User> searchDescriptor)
 		{
-			var response = _client.Search<User>(searchDescriptor);
-			if (response != null)
-			{
-				Log.Debug(response.DebugInformation);
-				Log.Debug("Result Count: " + response.Total);
-				foreach (var user in response.Hits)
-				{
-					Log.Debug(user.Source.ToString());
-				}
-			}
+			idx.ExecuteQuery(searchDescriptor);
 		}
 
 		public SearchDescriptor<User> QueryUsersByState(string state)
@@ -437,7 +415,58 @@ namespace NestExamples
 					Log.Debug(aggregation.Key + " - " + aggregation.DocCount);
 				}
 			}
+		}
 
+		public QueryContainer GetQueryForPercolate1(string state)
+		{
+			QueryContainer query = Query<User>.Term(r => r.State, state);
+			return query;
+		}
+
+		public void PopulatePercolateQueries()
+		{
+			List<string> emailIds = new RandomGenerator().GetEmailIds();
+			int count = 1;
+			List<UserPercolate> percolators = new List<UserPercolate>();
+			string[] states = new string[] { "AP", "TN", "KA", "KL", "DL", "UP", "TS" };
+			for(int i=0; i<20; i++)
+			{
+				UserPercolate percolator = new UserPercolate();
+				percolator.SearchId = count++;
+				percolator.SearchEmail = emailIds[ i % emailIds.Count];
+				percolator.Query = GetQueryForPercolate1(states[i % states.Length]);
+				percolators.Add(percolator);
+			}
+			pidx.PopulateData(percolators);
+		}
+
+		private void PercolateFromDocumentByState(string state)
+		{
+			User user = new User();
+			user.State = state;
+			var desc = new QueryContainerDescriptor<UserPercolate>()
+								.Percolate(p => p.Document<User>(user).Field(q => q.Query));
+			var searchDescriptor = new SearchDescriptor<UserPercolate>().Index(_percolateIndexName).Query(q => desc);
+			pidx.ExecuteQuery(searchDescriptor);
+		}
+
+		private void PercolateFromDocumentByStates()
+		{
+			foreach(string state in new string[] { "AP", "TN", "KA", "KL", "DL", "UP", "TS" })
+			{
+				PercolateFromDocumentByState(state);
+			}
+		}
+
+		private void PercolateFromESDoc()
+		{
+			for(int i=1; i<10; i++)
+			{
+				var desc = new QueryContainerDescriptor<UserPercolate>()
+									.Percolate(p => p.Field(q => q.Query).Index(_indexName).Type("user").Id(i.ToString()));
+				var searchDescriptor = new SearchDescriptor<UserPercolate>().Index(_percolateIndexName).Query(q => desc);
+				pidx.ExecuteQuery(searchDescriptor);
+			}
 		}
 
 		public void Query()
@@ -481,6 +510,8 @@ namespace NestExamples
 			QueryAggregator(QueryAggergator2());
 			QueryAggregator(QueryAggergator3());
 			QueryAggergator4();
+			PercolateFromDocumentByStates();
+			PercolateFromESDoc();
 		}
 
 		private List<User> GetUsers()

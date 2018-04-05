@@ -14,7 +14,6 @@ namespace NestExamples.CreateDelete
 	public class IndexFromFile<T> : ElasticIndexBase<T> where T: class
 	{
 		private string _fileName;
-		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
 		public IndexFromFile(ElasticClient client, string indexName, string fileName) : base(client, indexName)
 		{

@@ -12,6 +12,7 @@ namespace NestExamples
 		public static Random random = new Random();
 		string[] surnames_list = { "Mohanram", "Thangadurei", "LakshmiNarasimhan", "Ramakrishnan", "Gnanasekar", "Soundararajan", "Ramesh", "Subramanian", "Soundararajan", "Benjamin Franklin",    "AnandKumar", "Jayakumar",    "Palanisamy", "K",      "Selvaraj", "Patibandla", "Ramakrishnan", "VangalThulasidass", "Selvan", "Kasiviswanathan", "Kandasamy", "Subramanian", "Perumal", "M", "A", "Palani", "Rajkumar", "Thulasiraman", "Balasubramanian", "Thirumalai Velu S", "PoyyamozhiR", "Venkatachalapathy", "Gopalakrishnan", "Ramaiah", "Tiruveedula", "Palanisamy", "K", "Logachandran", "Govindharajan", "R", "Selvam", "Balashanmugam", "Jagannathan", "Pandian", "RaviChandran", "Krishnaswamy", "Srinivasan", "Ravi", "Vidyamsetti Subbarao", "Dhinagaran", "SaiPrasad", "Natarajan", "Shaik Mohammad", "Velan", "T G", "Naramsetti", "Rajuthevar Vetriselvan", "Duraisamy", "Paulchamy", "Subramanian", "R", "Suresh", "S", "Royal", "Venkataraman", "U", "Muthusami", "Srinivasan", "Muruganandham", "Subramanian", "Desikan", "Konagalla", "Srivatsa", "Sambasivam", "Vallathur Radhaiah", "Suresh", "K", "P", "B", "Dhanakodi", "Ganapathy", "Dudekula", "Prakash", "Aneel Kumar", "Metikala", "Duraisamy", "Chinnappa", "B", "Sambangi" };
 		string[] first_names_list = { "Anand", "Anjana Sherin", "Aravind",         "Arun Guptha",  "Arunkumar",  "AshokKumar",    "Ashwin", "Babu",        "Balakrishnan",  "Christopher Selvaraj", "Dhivya",     "Dinesh Kumar", "Dinesh",     "Ganesh", "Gokul",    "Harish", "Imayaselvan", "JaganMohan", "Janani", "Jeevanram", "Kanagaraj", "Kannan", "Karthick", "Karthika", "Karthikeyan", "Kowsalya Devi", "Krishanth", "Logesh", "Madhan", "Mahesh Kumar", "Manibharathi", "Manimuthuraman", "Mohanakrishnan", "Muthukrishnan", "Nagasatish", "Naveen", "NavinKumar", "Nimrutha", "Pooja", "Pooja", "PrakashKumar", "PrasannaKumar", "PrasannaKumar", "Praveen", "Raghavi", "Ram", "Raman", "Ramya", "Ranganath", "Rekha", "SaiPrasanna", "Saminathan", "Sanaulla", "SangeethKumar", "Sankar Babu", "Sateesh", "Satya", "Selvakumar", "Selvaraj", "Shadana", "ShanmugaPriya", "Sharanya", "Shreenath", "Shyam", "Sivaraman", "Sivashanmugam", "Sowmiya", "Sreenidhi", "Sridhar", "Srikrish", "Sriram", "Sudheer", "Supriya", "Suresh", "Thulasi Ram", "Varna", "Vignesh Ram Nithin", "VigneshKumar", "Vigneshwar", "VijayaKumar", "VinothKumar", "Rahiman", "Madankumar", "Minda", "Narendra Kumar", "Partheepan", "Senthil", "Thirumagal", "Visweswara Rao" };
+		string[] sex = { "M", "F", "M", "M", "M", "M", "M", "M", "M", "M", "F", "M", "M", "M", "M", "M", "M", "M", "F", "M", "M", "M", "M", "F", "M", "F", "M", "M", "M", "M", "M", "M", "M", "M", "M", "M", "M", "F", "F", "F", "M", "M", "M", "M", "F", "M", "M", "F", "M", "F", "M", "M", "M", "M", "M", "M", "F", "M", "M", "F", "F", "F", "M", "M", "M", "M", "F", "F", "M", "M", "M", "M", "F", "M", "M", "F", "M", "M", "M", "M", "M", "M", "M", "F", "M", "M", "M", "F", "M" };
 
 		string[] cities = { "Agartala", "Agra", "Amaravathi", "Anantapur", "Bengaluru", "Bhopal", "Bhubaneswar", "Chengalpattu", "Chennai", "Chidambaram", "Chittoor", "Delhi", "Eluru", "Gudur", "Guntur", "Guruvayur", "Hyderabad", "Indore", "Kadapa", "Kanchipuram", "Kannur", "Kanyakumari", "Kochi", "Kolkata", "Kozhikode", "Kumbakonam", "Kurnool", "Lucknow", "Madurai", "Mangalagiri", "Mangaluru", "Mumbai", "Mysore", "Nagpur", "Nellore", "Ongole", "Panaji", "Patna", "Pondicherry", "Pune", "Rajahmundry", "Rameswaram", "Srikakulam", "Srinagar", "Srirangam", "Tambaram", "Tanjore", "Tiruchirappalli", "Tirupathi", "Trivandrum", "Udupi", "Vijayawada", "Visakhapatnam", "Vizianagaram" };
 		string[] states = { "TR", "UP", "AP", "AP", "KA", "MP", "OR", "TN", "TN", "TN", "AP", "DL", "AP", "AP", "AP", "KL", "TS", "MP", "AP", "TN", "KL", "TN", "KL", "WB", "KL", "TN", "AP", "UP", "TN", "AP", "KA", "MH", "KA", "MH", "AP", "AP", "GA", "BR", "PY", "MH", "AP", "TN", "AP", "JK", "TN", "TN", "TN", "TN", "AP", "KL", "KA", "AP", "AP", "AP" };
@@ -86,6 +87,20 @@ namespace NestExamples
 			user.ModifiedDate = GetDate(user.CreatedDate);
 			user.CustomData = new List<NameValuePair>() { new NameValuePair("Name1", "Value" + (id % 20)), new NameValuePair("Name2", "Value" + random.Next(200)) };
 			return user;
+		}
+
+		public List<string> GetEmailIds()
+		{
+			List<string> emailIds = new List<string>();
+			int c = 0;
+			for(int i=0; i< first_names_list.Length; i++)
+			{
+				if(sex[i] == "F")
+				{
+					emailIds.Add(first_names_list[i].Replace(" ", ".").ToLower() + "." + surnames_list[i].Replace(" ", ".").ToLower() + "@" + domains[(i + 1) % domains.Length]);
+				}
+			}
+			return emailIds;
 		}
 	}
 }

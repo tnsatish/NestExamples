@@ -1,0 +1,147 @@
+﻿{
+	"settings": {
+		"analysis": {
+			"filter": {
+				"edge_filter": {
+					"min_gram": "1",
+					"side": "front",
+					"type": "edgeNGram",
+					"max_gram": "20"
+				},
+				"multispace_replace": {
+					"pattern": "\\s+",
+					"type": "pattern_replace",
+					"replacement": " "
+				},
+				"punctuation_replace": {
+					"pattern": "[^\\w\\s]|_",
+					"type": "pattern_replace",
+					"replacement": ""
+				}
+			},
+			"analyzer": {
+				"keyword_analyzer": {
+					"type": "custom",
+					"filter": [
+						"lowercase",
+						"asciifolding",
+						"punctuation_replace",
+						"multispace_replace"
+					],
+					"tokenizer": "keyword"
+				},
+				"edge_analyzer": {
+					"type": "custom",
+					"filter": [
+						"lowercase",
+						"asciifolding",
+						"punctuation_replace",
+						"multispace_replace",
+						"edge_filter"
+					],
+					"tokenizer": "keyword"
+				}
+			}
+		}
+	},
+	"mappings": {
+		"userpercolate": {
+			"properties": {
+				"query": {
+					"type": "percolator"
+				},
+				"searchId": {
+					"type": "integer"
+				},
+				"searchEmail": {
+					"type": "keyword"
+				},
+				"address": {
+					"type": "text",
+					"analyzer": "keyword_analyzer",
+					"fields": {
+						"autocomplete": {
+							"type": "text",
+							"analyzer": "edge_analyzer",
+							"search_analyzer": "keyword_analyzer"
+						}
+					}
+				},
+				"city": {
+					"type": "keyword"
+				},
+				"createdDate": {
+					"type": "date"
+				},
+				"email": {
+					"type": "text",
+					"analyzer": "keyword_analyzer",
+					"fields": {
+						"autocomplete": {
+							"type": "text",
+							"analyzer": "edge_analyzer",
+							"search_analyzer": "keyword_analyzer"
+						}
+					}
+				},
+				"modifiedDate": {
+					"type": "date"
+				},
+				"name": {
+					"type": "text",
+					"analyzer": "keyword_analyzer",
+					"fields": {
+						"autocomplete": {
+							"type": "text",
+							"analyzer": "edge_analyzer",
+							"search_analyzer": "keyword_analyzer"
+						}
+					}
+				},
+				"id": {
+					"type": "long"
+				},
+				"isActive": {
+					"type": "boolean"
+				},
+				"primaryPhone": {
+					"type": "text",
+					"analyzer": "keyword_analyzer",
+					"fields": {
+						"autocomplete": {
+							"type": "text",
+							"analyzer": "edge_analyzer",
+							"search_analyzer": "keyword_analyzer"
+						}
+					}
+				},
+				"state": {
+					"type": "keyword"
+				},
+				"zip": {
+					"type": "keyword"
+				},
+				"customData": {
+					"type": "nested",
+					"properties": {
+						"name": {
+							"type": "text",
+							"analyzer": "keyword_analyzer"
+						},
+						"value": {
+							"type": "text",
+							"analyzer": "keyword_analyzer",
+							"fields": {
+								"autocomplete": {
+									"type": "text",
+									"analyzer": "edge_analyzer",
+									"search_analyzer": "keyword_analyzer"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

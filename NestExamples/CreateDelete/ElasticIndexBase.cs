@@ -18,7 +18,7 @@ namespace NestExamples.CreateDelete
 		protected string _elasticServer;
 		protected string _indexName;
 		protected ElasticClient _client;
-		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+		protected static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
 		public ElasticIndexBase() { }
 
@@ -110,12 +110,8 @@ namespace NestExamples.CreateDelete
 			}
 		}
 
-		public virtual void PopulateData()
+		private void LogResponseAndSleep(IBulkResponse response)
 		{
-			var descriptor = new BulkDescriptor();
-			AddElementsToIndex(descriptor);
-			var response = _client.Bulk(descriptor);
-
 			if (response != null)
 			{
 				Log.Debug(response.DebugInformation);
@@ -125,6 +121,22 @@ namespace NestExamples.CreateDelete
 				Log.Error("[ElasticSearch] Unknown error - received NULL response from bulk operation.");
 			}
 			Thread.Sleep(5000);
+		}
+
+		public virtual void PopulateData()
+		{
+			var descriptor = new BulkDescriptor();
+			AddElementsToIndex(descriptor);
+			var response = _client.Bulk(descriptor);
+			LogResponseAndSleep(response);
+		}
+
+		public virtual void PopulateData(List<T> elements)
+		{
+			var descriptor = new BulkDescriptor();
+			AddElementsToIndex(descriptor, elements);
+			var response = _client.Bulk(descriptor);
+			LogResponseAndSleep(response);
 		}
 
 		protected virtual void AddElementsToIndex(BulkDescriptor desc)
