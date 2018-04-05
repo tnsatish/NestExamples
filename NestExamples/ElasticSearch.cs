@@ -469,6 +469,42 @@ namespace NestExamples
 			}
 		}
 
+		private void PercolateWithFilters1()
+		{
+			User user = new User();
+			user.State = "TN";
+			var desc = new QueryContainerDescriptor<UserPercolate>()
+								.Percolate(p => p.Document<User>(user).Field(q => q.Query));
+			var searchDescriptor = new SearchDescriptor<UserPercolate>()
+										.Index(_percolateIndexName)
+										.Query(q => q.Bool(r => r.Must(t => t.Range(s => s.Field(a => a.SearchId).LessThanOrEquals(10)) && desc)));
+			pidx.ExecuteQuery(searchDescriptor);
+		}
+
+		private void PercolateWithFilters2()
+		{
+			User user = new User();
+			user.State = "TN";
+			var desc = new QueryContainerDescriptor<UserPercolate>()
+								.Percolate(p => p.Document<User>(user).Field(q => q.Query));
+			var searchDescriptor = new SearchDescriptor<UserPercolate>()
+										.Index(_percolateIndexName)
+										.Query(q => q.Bool(r => r.Must(t => t.Range(s => s.Field(a => a.SearchId).GreaterThanOrEquals(4).LessThanOrEquals(15)) && desc)));
+			pidx.ExecuteQuery(searchDescriptor);
+		}
+
+		private void PercolateWithFilters3()
+		{
+			User user = new User();
+			user.State = "TN";
+			var desc = new QueryContainerDescriptor<UserPercolate>()
+								.Percolate(p => p.Document<User>(user).Field(q => q.Query));
+			var searchDescriptor = new SearchDescriptor<UserPercolate>()
+										.Index(_percolateIndexName)
+										.Query(q => q.Range(s => s.Field(a => a.SearchId).GreaterThanOrEquals(4).LessThanOrEquals(20)) && desc);
+			pidx.ExecuteQuery(searchDescriptor);
+		}
+
 		public void Query()
 		{
 			ElasticQuery(QueryUsersByState("TN"));
@@ -512,6 +548,9 @@ namespace NestExamples
 			QueryAggergator4();
 			PercolateFromDocumentByStates();
 			PercolateFromESDoc();
+			PercolateWithFilters1();
+			PercolateWithFilters2();
+			PercolateWithFilters3();
 		}
 
 		private List<User> GetUsers()
