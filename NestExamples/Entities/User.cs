@@ -24,9 +24,12 @@ namespace NestExamples.Entities
 		public override string ToString()
 		{
 			StringBuilder sb = new StringBuilder(Id + " " + Name + " " + Email + " " + Address + " " + City + " " + State + " " + Zip + " " + PrimaryPhone + " " + CreatedDate + " " + ModifiedDate + " ");
-			foreach (var pair in CustomData)
+			if(CustomData != null)
 			{
-				sb.Append(pair.Name).Append(": ").Append(pair.Value).Append(" ");
+				foreach (var pair in CustomData)
+				{
+					sb.Append(pair.Name).Append(": ").Append(pair.Value).Append(" ");
+				}
 			}
 			return sb.ToString();
 		}

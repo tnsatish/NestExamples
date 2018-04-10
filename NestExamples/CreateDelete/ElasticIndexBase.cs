@@ -155,7 +155,7 @@ namespace NestExamples.CreateDelete
 			}
 		}
 
-		public void ExecuteQuery(SearchDescriptor<T> searchDescriptor)
+		public ISearchResponse<T> ExecuteQuery(SearchDescriptor<T> searchDescriptor)
 		{
 			var response = _client.Search<T>(searchDescriptor);
 			if (response != null)
@@ -167,6 +167,30 @@ namespace NestExamples.CreateDelete
 					Log.Debug(user.Source.ToString());
 				}
 			}
+			return response;
+		}
+
+		public IMultiSearchResponse ExecuteQueries(params SearchDescriptor<T>[] searchDescriptor)
+		{
+			var multiDescriptor = new MultiSearchDescriptor();
+			foreach(var desc in searchDescriptor)
+			{
+				multiDescriptor.Search<T>(q => desc);
+			}
+			var allResponses = _client.MultiSearch(multiDescriptor);
+			if (allResponses != null)
+			{
+				Log.Debug(allResponses.DebugInformation);
+				foreach (var response in allResponses.GetResponses<T>())
+				{
+					Log.Debug("Result Count: " + response.Total);
+					foreach (var hit in response.Hits)
+					{
+						Log.Debug(hit.Source.ToString());
+					}
+				}
+			}
+			return allResponses;
 		}
 
 		public virtual void ExecuteQueries()

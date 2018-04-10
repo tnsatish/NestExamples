@@ -23,6 +23,7 @@ namespace NestExamples
 		private string _elasticServer;
 		private string _indexName;
 		private string _percolateIndexName;
+		private const string _typeName = "user";
 		private IndexFromFile<User> idx;
 		private IndexFromFile<UserPercolate> pidx;
 
@@ -83,14 +84,9 @@ namespace NestExamples
 
 		public void DeleteIndex()
 		{
-			DeleteIndex(_indexName);
-			DeleteIndex(_percolateIndexName);
-		}
-
-		public void DeleteIndex(string index)
-		{
-			var idx = new ElasticIndexBase<User>(_client, index);
+			DeleteUsers();
 			idx.DeleteIndex();
+			pidx.DeleteIndex();
 		}
 
 		public void PopulateUsers()
@@ -102,6 +98,18 @@ namespace NestExamples
 		public void ElasticQuery(SearchDescriptor<User> searchDescriptor)
 		{
 			idx.ExecuteQuery(searchDescriptor);
+		}
+
+		public void DeleteUsers()
+		{
+			var searchDescriptor = new SearchDescriptor<User>().Index(_indexName);
+			ISearchResponse<User> response = idx.ExecuteQuery(searchDescriptor);
+			foreach(var hit in response.Hits)
+			{
+				Log.Debug("Deleting " + hit.Source);
+				var deleteResponse = _client.Delete(new DeleteRequest<User>(_indexName, "user", hit.Id));
+				Log.Debug(deleteResponse.DebugInformation);
+			}
 		}
 
 		public SearchDescriptor<User> QueryUsersByState(string state)
@@ -252,6 +260,13 @@ namespace NestExamples
 			sort.Field(f => f.Field(q => q.State).Order(SortOrder.Descending).MissingLast());
 			sort.Field(q => q.Id, SortOrder.Descending);
 			searchDescriptor.Sort(q => sort);
+			return searchDescriptor;
+		}
+
+		public SearchDescriptor<User> QueryGetSelectedFields()
+		{
+			var searchDescriptor = new SearchDescriptor<User>().Index(_indexName);
+			searchDescriptor.Source(s => s.Includes(f => f.Fields("name", "email")));
 			return searchDescriptor;
 		}
 
@@ -458,6 +473,24 @@ namespace NestExamples
 			}
 		}
 
+		private void PercolateFromMultipleDocuments()
+		{
+			List<User> users = new List<User>();
+			User user = new User();
+			user.State = "AP";
+			users.Add(user);
+			User user1 = new User();
+			user1.State = "TN";
+			users.Add(user);
+
+			var desc1 = Query<UserPercolate>.Percolate(p => p.Document(user).Field(q => q.Query));
+			var desc2 = Query<UserPercolate>.Percolate(p => p.Document(user1).Field(q => q.Query));
+			var searchDescriptor1 = new SearchDescriptor<UserPercolate>().Index(_percolateIndexName).Query(q => desc1);
+			var searchDescriptor2 = new SearchDescriptor<UserPercolate>().Index(_percolateIndexName).Query(q => desc2);
+
+			pidx.ExecuteQueries(searchDescriptor1, searchDescriptor2);
+		}
+
 		private void PercolateFromESDoc()
 		{
 			for(int i=1; i<10; i++)
@@ -562,6 +595,8 @@ namespace NestExamples
 			PercolateWithFilters2();
 			PercolateWithFilters3();
 			PercolateWithFilters4();
+			PercolateFromMultipleDocuments();
+			ElasticQuery(QueryGetSelectedFields());
 		}
 
 		private List<User> GetUsers()
