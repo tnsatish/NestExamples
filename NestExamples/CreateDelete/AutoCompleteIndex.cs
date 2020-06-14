@@ -78,8 +78,7 @@ namespace NestExamples.CreateDelete
 											}).CharFilters(new[] {
 													"lowercase_replace"
 											}).Tokenizer("keyword")))))
-					.Mappings(m => m.Map<AutoCompleteItem>(mm => mm
-									.Properties(p => p
+					.Map<AutoCompleteItem>(m => m.Properties(p => p
 										.Text(s => s.Name(a => a.Name).Analyzer("keyword_analyzer"))
 										.Text(s => s.Name(a => a.NameForSearch)
 													.Analyzer("keyword_analyzer")
@@ -100,7 +99,7 @@ namespace NestExamples.CreateDelete
 																					.Boolean(b => b.Name(a => a.IsCustomized).DocValues())
 																					.Keyword(s => s.Name(a => a.ThumbnailUrl))
 												)
-										))));
+										)));
 
 			return CreateIndexFunc;
 		}

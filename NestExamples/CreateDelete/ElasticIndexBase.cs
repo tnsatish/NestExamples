@@ -33,7 +33,7 @@ namespace NestExamples.CreateDelete
 		{
 			DeleteIndexIfExists();
 			var createDescriptor = GetCreateIndexDescriptor();
-			var response = _client.CreateIndex(_indexName, createDescriptor);
+			var response = _client.Indices.Create(_indexName, createDescriptor);
 			if (response != null)
 			{
 				Log.Debug(response.DebugInformation);
@@ -110,7 +110,7 @@ namespace NestExamples.CreateDelete
 			}
 		}
 
-		private void LogResponseAndSleep(IBulkResponse response)
+		private void LogResponseAndSleep(BulkResponse response)
 		{
 			if (response != null)
 			{
@@ -170,7 +170,7 @@ namespace NestExamples.CreateDelete
 			return response;
 		}
 
-		public IMultiSearchResponse ExecuteQueries(params SearchDescriptor<T>[] searchDescriptor)
+		public MultiSearchResponse ExecuteQueries(params SearchDescriptor<T>[] searchDescriptor)
 		{
 			var multiDescriptor = new MultiSearchDescriptor();
 			foreach(var desc in searchDescriptor)

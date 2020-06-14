@@ -107,7 +107,7 @@ namespace NestExamples
 			foreach(var hit in response.Hits)
 			{
 				Log.Debug("Deleting " + hit.Source);
-				var deleteResponse = _client.Delete(new DeleteRequest<User>(_indexName, "user", hit.Id));
+				var deleteResponse = _client.Delete(new DeleteRequest<User>(_indexName, hit.Id));
 				Log.Debug(deleteResponse.DebugInformation);
 			}
 		}
@@ -496,7 +496,7 @@ namespace NestExamples
 			for(int i=1; i<10; i++)
 			{
 				var desc = new QueryContainerDescriptor<UserPercolate>()
-									.Percolate(p => p.Field(q => q.Query).Index(_indexName).Type("user").Id(i.ToString()));
+									.Percolate(p => p.Field(q => q.Query).Index(_indexName).Id(i.ToString()));
 				var searchDescriptor = new SearchDescriptor<UserPercolate>().Index(_percolateIndexName).Query(q => desc);
 				pidx.ExecuteQuery(searchDescriptor);
 			}
